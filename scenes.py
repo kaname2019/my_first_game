@@ -125,3 +125,73 @@ class GuildHomeScene(Scene):
             message_text = self.label_font.render(self.message, True, settings.RED)
             message_rect = message_text.get_rect(center=(settings.SCREEN_WIDTH // 2, settings.SCREEN_HEIGHT - 50))
             screen.blit(message_text, message_rect)
+
+# ★★★ 戦闘画面のクラス ★★★
+class BattleScene(Scene):
+    def __init__(self, player, enemy_templates):
+        super().__init__()
+        self.player = player.copy() # 戦闘用のプレイヤーデータをコピー
+        self.enemy = random.choice(enemy_templates).copy()
+        
+        self.battle_log = [f"{self.enemy['name']}が現れた！"]
+        self.battle_turn = "player"
+        self.turn_timer = 120 # 2秒待機
+
+        # フォントの準備
+        self.label_font = pygame.font.SysFont("meiryo", 40)
+        self.detail_font = pygame.font.SysFont("meiryo", 28)
+
+    def update(self):
+        if self.turn_timer > 0:
+            self.turn_timer -= 1
+            return
+
+        # プレイヤーのターン
+        if self.battle_turn == "player":
+            log_message = f"▶ {self.player['name']}の攻撃！"
+            damage = max(1, self.player['attack'] - self.enemy['defense'])
+            self.enemy['hp'] -= damage
+            log_message += f" {self.enemy['name']}に {damage} のダメージを与えた。"
+            self.battle_log.append(log_message)
+            self.battle_turn = "enemy"
+            self.turn_timer = 120
+
+        # 敵のターン
+        elif self.battle_turn == "enemy":
+            log_message = f"▶ {self.enemy['name']}の攻撃！"
+            damage = max(1, self.enemy['attack'] - self.player['defense'])
+            self.player['hp'] -= damage
+            log_message += f" {self.player['name']}は {damage} のダメージを受けた。"
+            self.battle_log.append(log_message)
+            self.battle_turn = "player"
+            self.turn_timer = 120
+
+        if len(self.battle_log) > 6:
+            self.battle_log.pop(0)
+
+    def draw(self, screen):
+        screen.fill(settings.DARK_GRAY)
+        margin = settings.SCREEN_WIDTH * 0.05
+
+        # (A) プレイヤー情報の表示
+        player_info_y = settings.SCREEN_HEIGHT * 0.1
+        player_name_text = self.label_font.render(f"{self.player['name']} LV:{self.player['level']}", True, settings.LIGHT_CYAN)
+        screen.blit(player_name_text, (margin, player_info_y))
+        draw_hp_bar(screen, margin, player_info_y + 50, 400, 30, self.player['hp'], self.player['max_hp'])
+
+        # (B) 敵情報の表示
+        enemy_info_x = settings.SCREEN_WIDTH - margin - 400
+        enemy_name_text = self.label_font.render(f"{self.enemy['name']}", True, settings.RED)
+        screen.blit(enemy_name_text, (enemy_info_x, player_info_y))
+        draw_hp_bar(screen, enemy_info_x, player_info_y + 50, 400, 30, self.enemy['hp'], self.enemy['max_hp'])
+
+        # (C) バトルログのエリア
+        log_height = settings.SCREEN_HEIGHT * 0.4
+        log_y = settings.SCREEN_HEIGHT - log_height - (margin * 0.5)
+        log_rect = pygame.Rect(margin, log_y, settings.SCREEN_WIDTH - (margin * 2), log_height)
+        pygame.draw.rect(screen, settings.BORDER_COLOR, log_rect, 2)
+        log_label_text = self.label_font.render("バトルログ", True, settings.LIGHT_CYAN)
+        screen.blit(log_label_text, (log_rect.x + 10, log_rect.y + 10))
+        for i, log in enumerate(self.battle_log):
+            log_text = self.detail_font.render(log, True, settings.LIGHT_CYAN)
+            screen.blit(log_text, (log_rect.x + 20, log_rect.y + 60 + (i * 35)))
