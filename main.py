@@ -10,7 +10,6 @@ def main():
     pygame.display.set_caption(settings.CAPTION)
     clock = pygame.time.Clock()
 
-    # シーンの管理
     guild_home_scene = GuildHomeScene()
     current_scene = guild_home_scene
 
