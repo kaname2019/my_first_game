@@ -36,7 +36,8 @@ class GuildHomeScene(Scene):
         self.training_cost = 50
         self.message = ""
         self.message_timer = 0
-        
+        self.stage = 1 # ★ ステージ番号を管理
+
         # フォントの準備
         self.title_font = pygame.font.SysFont("meiryo", 60)
         self.label_font = pygame.font.SysFont("meiryo", 40)
@@ -57,7 +58,10 @@ class GuildHomeScene(Scene):
         facility_y = list_y + report_height + margin * 0.5
         facility_height = settings.SCREEN_HEIGHT - facility_y - (margin * 0.5)
         self.facility_rect = pygame.Rect(right_panel_x, facility_y, report_width, facility_height)
-
+    
+    def get_stage_number(self): # ★ main.pyからステージ番号を取得するためのメソッド
+        return self.stage
+    
     def handle_events(self, events):
         for event in events:
             if event.type == pygame.MOUSEBUTTONDOWN:
@@ -91,6 +95,7 @@ class GuildHomeScene(Scene):
 
     def process_battle_result(self, data):
         if data["result"] == "victory":
+            self.stage += 1 # ★ 勝利したらステージを進める
             xp = data["xp_reward"]
             winner_name = data["winner_name"]
             self.message = f"冒険成功！ {winner_name}は{xp}の経験値を獲得！"
@@ -114,7 +119,8 @@ class GuildHomeScene(Scene):
         screen.fill(settings.DARK_GRAY)
         
         # (A) タイトル
-        title_text = self.title_font.render("ギルドホーム", True, settings.LIGHT_CYAN)
+        # タイトル描画部分にステージ番号も表示
+        title_text = self.title_font.render(f"ギルドホーム - Stage {self.stage}", True, settings.LIGHT_CYAN)
         title_rect = title_text.get_rect(center=(settings.SCREEN_WIDTH // 2, settings.SCREEN_HEIGHT * 0.08))
         screen.blit(title_text, title_rect)
 
@@ -169,10 +175,10 @@ class GuildHomeScene(Scene):
 
 # 戦闘画面のクラス
 class BattleScene(Scene):
-    def __init__(self, player):
+    def __init__(self, player, enemy_pool): # ★ enemy_templatesからenemy_poolに変更
         super().__init__()
         self.player = player.copy()
-        self.enemy = random.choice(enemy_templates).copy()
+        self.enemy = random.choice(enemy_pool).copy() # ★ 絞り込まれたリストから敵を選ぶ
         self.battle_log = [f"{self.enemy['name']}が現れた！"]
         self.battle_turn = "player"
         self.turn_timer = 120
@@ -250,12 +256,12 @@ class BattleScene(Scene):
         draw_hp_bar(screen, enemy_info_x, player_info_y + 50, 400, 30, self.enemy['hp'], self.enemy['max_hp'])
 
         # (C) バトルログのエリア
-        log_height = settings.SCREEN_HEIGHT * 0.4
-        log_y = settings.SCREEN_HEIGHT - log_height - (margin * 0.5)
-        log_rect = pygame.Rect(margin, log_y, settings.SCREEN_WIDTH - (margin * 2), log_height)
-        pygame.draw.rect(screen, settings.BORDER_COLOR, log_rect, 2)
-        log_label_text = self.label_font.render("バトルログ", True, settings.LIGHT_CYAN)
-        screen.blit(log_label_text, (log_rect.x + 10, log_rect.y + 10))
-        for i, log in enumerate(self.battle_log):
+# ★★★ ログ表示の改善 ★★★
+        log_start_y = log_rect.y + 60
+        # ログリストの後ろから順番に、描画エリアに収まるだけ表示する
+        for i, log in enumerate(reversed(self.battle_log)):
+            log_y_pos = (log_rect.bottom - 30) - (i * 35)
+            if log_y_pos < log_start_y:
+                break # エリアからはみ出たら描画を終了
             log_text = self.detail_font.render(log, True, settings.LIGHT_CYAN)
-            screen.blit(log_text, (log_rect.x + 20, log_rect.y + 60 + (i * 35)))
+            screen.blit(log_text, (log_rect.x + 20, log_y_pos))
