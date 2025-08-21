@@ -1,6 +1,7 @@
 # main.py
 import pygame
 import settings
+import game_objects
 from scenes import GuildHomeScene, BattleScene
 
 def main():
@@ -23,7 +24,16 @@ def main():
         next_scene_name, data = current_scene.handle_events(events)
         
         if next_scene_name == "BATTLE":
-            current_scene = BattleScene(data["player"])
+            stage = guild_home_scene.get_stage_number()
+            
+            if stage <= 3:
+                enemy_pool = [e for e in game_objects.enemy_templates if e['name'] == 'スライム']
+            elif stage <= 6:
+                enemy_pool = [e for e in game_objects.enemy_templates if e['name'] in ['スライム', 'ゴブリン']]
+            else:
+                enemy_pool = game_objects.enemy_templates
+                
+            current_scene = BattleScene(data["player"], enemy_pool)
         elif next_scene_name == "GUILD_HOME":
             guild_home_scene.process_battle_result(data)
             current_scene = guild_home_scene

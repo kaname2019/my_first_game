@@ -18,11 +18,10 @@ adventurers_data = [
     {"name": "シーラ", "level": 1, "xp": 0, "xp_to_next_level": 50, "hp": 120, "max_hp": 120, "attack": 10, "defense": 15, "skills": ["ヒール", "防御"]}
 ]
 
-# 敵のテンプレート
 enemy_templates = [
-    {"name": "スライム", "hp": 50, "max_hp": 50, "attack": 8, "defense": 3, "xp_reward": 30},
+    {"name": "スライム", "hp": 50, "max_hp": 50, "attack": 8, "defense": 3, "xp_reward": 25},
     {"name": "ゴブリン", "hp": 80, "max_hp": 80, "attack": 12, "defense": 5, "xp_reward": 40},
-    {"name": "オーク", "hp": 150, "max_hp": 150, "attack": 15, "defense": 8, "xp_reward": 70},
+    {"name": "オーク",   "hp": 150, "max_hp": 150, "attack": 15, "defense": 8, "xp_reward": 70},
     {"name": "ゴーレム", "hp": 250, "max_hp": 250, "attack": 18, "defense": 15, "xp_reward": 120}
 ]
 
