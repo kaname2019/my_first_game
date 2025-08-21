@@ -1,13 +1,15 @@
 # main.py
 import pygame
 import settings
-from scenes import GuildHomeScene, BattleScene, draw_hp_bar
+from scenes import GuildHomeScene, BattleScene
+
 def main():
     pygame.init()
     screen = pygame.display.set_mode((settings.SCREEN_WIDTH, settings.SCREEN_HEIGHT))
     pygame.display.set_caption(settings.CAPTION)
     clock = pygame.time.Clock()
 
+    # シーンの管理
     guild_home_scene = GuildHomeScene()
     current_scene = guild_home_scene
 
@@ -21,13 +23,10 @@ def main():
         next_scene_name, data = current_scene.handle_events(events)
         
         if next_scene_name == "BATTLE":
-            current_scene = BattleScene(data["player"], data["enemies"])
-        # ★★★ ここからが追加部分 ★★★
+            current_scene = BattleScene(data["player"])
         elif next_scene_name == "GUILD_HOME":
-            # 戦闘結果をギルドホームに伝える
             guild_home_scene.process_battle_result(data)
             current_scene = guild_home_scene
-        # ★★★ ここまで ★★★
         
         current_scene.update()
         current_scene.draw(screen)
