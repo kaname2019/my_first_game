@@ -1,7 +1,7 @@
 # scenes.py
 import pygame
 import settings
-import game_objects
+from game_objects import adventurers_data, check_level_up
 import random
 
 # HPバーを描画する関数
@@ -84,6 +84,15 @@ class BattleScene(Scene):
         self.detail_font = pygame.font.SysFont("meiryo", 28)
 
     def handle_events(self, events):
+        for event in events:
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if self.report_rect.collidepoint(event.pos):
+                    if self.selected_adventurer_index is not None:
+                        selected = adventurers_data[self.selected_adventurer_index]
+                        return "BATTLE", {"player": selected}
+                    else:
+                        self.message = "冒険に出るメンバーを選択してください。"
+                        self.message_timer = 120
         # 戦闘が終了していたら、クリックでギルドホームに戻る
         if self.battle_result is not None:
             for event in events:
@@ -91,7 +100,22 @@ class BattleScene(Scene):
                     # シーン変更の合図と、戦闘結果を返す
                     return "GUILD_HOME", {"result": self.battle_result, "xp_reward": self.enemy.get("xp_reward", 0)}
         return None, None
-
+    
+    def process_battle_result(self, data):
+        if data["result"] == "victory":
+            xp = data["xp_reward"]
+            winner_name = data["winner_name"]
+            self.message = f"冒険成功！ {winner_name}は{xp}の経験値を獲得！"
+            self.message_timer = 180
+            for adventurer in adventurers_data:
+                if adventurer["name"] == winner_name:
+                    adventurer["xp"] += xp
+                    check_level_up(adventurer)
+                    break
+        else:
+            self.message = "冒険は失敗に終わった..."
+            self.message_timer = 180
+            
     def update(self):
         # 戦闘が既に終了していたら、何もしない
         if self.battle_result is not None:
